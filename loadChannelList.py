@@ -13,15 +13,10 @@ def loadChannelList(file):
     except ValueError:
         pass
 
-inputJson = sys.argv[1]
-
-# Open testFile.json and load into variables
-with open(inputJson, 'r') as file:
-    data = json.load(file)
-    fileName = data["fileName"]
+inputJson = json.loads(sys.stdin.read())
 
 # Run loadChannelList function on target file
-channelList = loadChannelList(fileName)
+channelList = loadChannelList(inputJson)
 
 # Convert channel list into JSON
 # File name is channelList.json
