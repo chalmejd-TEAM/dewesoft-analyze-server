@@ -1,13 +1,18 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import subprocess
 import os
 
+
+
 app = Flask(__name__)
+CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Create the folder if it doesn't exist
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/run_python", methods=["POST"])
+
 def run_python():
     try:
         # Check if the file is part of the request
