@@ -3,9 +3,9 @@ import json
 import sys
 
 # Load target dewesoft file channel list
-def loadChannelList(file):
+def main(file_path):
     try:
-        with dw.open(file) as dataFile:
+        with dw.open(file_path) as dataFile:
             channelList = [channel for channel in dataFile
                         if not 'CAN' in dataFile[channel].channel_index]
         return channelList
@@ -13,14 +13,11 @@ def loadChannelList(file):
     except ValueError:
         pass
 
-inputJson = json.loads(sys.stdin.read())
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print(json.dumps({"error": "No file path provided"}))
+        sys.exit(1)
 
-# Run loadChannelList function on target file
-channelList = loadChannelList(inputJson)
-
-# Convert channel list into JSON
-# File name is channelList.json
-with open("channelList.json", "w") as final:
-	json.dump(channelList, final)
-     
-print(channelList)
+    file_path = sys.argv[1]
+    result = main(file_path)
+    print(json.dumps(result))
