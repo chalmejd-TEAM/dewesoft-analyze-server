@@ -5,7 +5,7 @@ import fast_calculations
 import json
 import sys
 
-# Load target dewesoft file and all data
+# Load the target file and perform calculations
 def loadFile(file):
     try:
         with dw.open(file) as dataFile:
@@ -13,40 +13,32 @@ def loadFile(file):
                         if not 'CAN' in dataFile[channel].channel_index]
             df = dataFile.dataframe(channelList)
         return df
-
+        
     except ValueError:
         pass
 
-inputJson = sys.argv[1]
+if __name__ == "__main__":
+    # Get command-line arguments
+    file_path = sys.argv[1]
+    load_channel = sys.argv[2]
+    rev_channel = sys.argv[3]
+    exponents = json.loads(sys.argv[4])  # Parse exponents from JSON string
 
-# Open testFile.json and load into variables
-with open(inputJson, 'r') as file:
-    data = json.load(file)
-    fileName = data["fileName"]
-    exponents = data["exponents"]
-    loadChannel = data["loadChannel"]
-    revChannel = data["revChannel"]
+    # Load the file data
+    df = loadFile(file_path)
 
-# Run loadFile function on target file
-df = loadFile(fileName)
+    # Perform calculations
+    load = df[load_channel].to_numpy()
+    revs = df[rev_channel].to_numpy()
 
-# Convert load and rev channels to numpy arrays
-load = df[loadChannel].to_numpy()
-revs = df[revChannel].to_numpy()
+    torque_smoothed = abs(np.array(load))  
+    rev_count = np.array(revs)       
 
-# Convert negative torque to positive torque and remove NaN values from arrays
-torque_smoothed = abs(np.array(load))  
-rev_count = np.array(revs)       
+    torque_smoothed = np.nan_to_num(torque_smoothed, nan=0.0)
+    rev_count = np.nan_to_num(rev_count, nan=0.0)
 
-torque_smoothed = np.nan_to_num(torque_smoothed, nan=0.0)  # Replace NaN with 0
-rev_count = np.nan_to_num(rev_count, nan=0.0)             # Replace NaN with 0
+    # Perform the EWM calculations with the exponents
+    results = fast_calculations.calculate(torque_smoothed, rev_count, exponents)
 
-# Run EWM calculations on arrays using exponents
-results = fast_calculations.calculate(torque_smoothed, rev_count, exponents)
-
-# Convert "results" into JSON
-# File name is results.json
-with open("results.json", "w") as final:
-	json.dump(results, final)
-     
-print(results)
+    # Print the results as JSON for Flask to capture
+    print(json.dumps(results))
