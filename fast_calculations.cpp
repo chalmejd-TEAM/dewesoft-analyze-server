@@ -29,7 +29,7 @@ py::array_t<double> movingAverage(py::array_t<double> signal, int window) {
 }
 
 // Function for calculating exponential weighted mean
-std::pair<double, double> calculateExp(
+std::tuple<double, double, int> calculateExp(
     double exp,
     const std::vector<double> &revCountAbs,
     const std::vector<double> &torqueSmoothed,
@@ -58,9 +58,8 @@ std::pair<double, double> calculateExp(
     double divTorque = sumTorque / maxRev;
     double eWM = std::pow(divTorque, 1.0 / exp);
 
-    return {exp, eWM};
+    return {exp, eWM, maxRev};
 }
-
 
 // Main calculation function
 py::list calculate(
@@ -90,7 +89,7 @@ py::list calculate(
     });
 
     // Multithreaded computation
-    std::vector<std::future<std::pair<double, double>>> futures;
+    std::vector<std::future<std::tuple<double, double, int>>> futures;
     for (double exp : expList) {  // Use `double` instead of `int`
         futures.emplace_back(std::async(std::launch::async, calculateExp, exp, revCountAbs, torqueSmoothedVec, maxRev));
     }
@@ -98,7 +97,7 @@ py::list calculate(
     py::list results;
     for (auto &future : futures) {
         auto result = future.get();
-        results.append(py::make_tuple(result.first, result.second));
+        results.append(py::make_tuple(std::get<0>(result), std::get<1>(result), std::get<2>(result)));
     }
 
     return results;
