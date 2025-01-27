@@ -65,6 +65,39 @@ def run_calcs():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route("/findPeaks", methods=["POST"])
+def findPeaks():
+    try:
+        # Check if the file is part of the request
+        if "file" not in request.files:
+            return jsonify({"status": "error", "message": "No file uploaded"}), 400
+
+        uploaded_file = request.files["file"]
+        if uploaded_file.filename == "":
+            return jsonify({"status": "error", "message": "No file selected"}), 400
+
+        # Save the file to the upload directory
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], uploaded_file.filename)
+        uploaded_file.save(file_path)
+
+        # Get the selected channels and exponents from the request
+        load_channel = request.form.get("loadChannel")
+        rev_channel = request.form.get("revChannel")
+        prominence = request.form.get("prominence")
+        threshold = request.form.get("threshold")
+
+        # Call the findPeaks.py script with the file path, channels, prominence, and threshold as arguments
+        result = execute_peaks_script("findPeaks", file_path, load_channel, rev_channel, prominence, threshold)
+
+        # Return the results from the script execution
+        if "output" in result:
+            return jsonify({"status": "success", "results": result["output"]}), 200
+        else:
+            return jsonify({"status": "error", "message": result["error"]}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 def execute_python_script(script_name, file_path):
     try:
         # Construct the command to run the Python script with the file as an argument
@@ -83,6 +116,21 @@ def execute_calc_script(script_name, file_path, load_channel, rev_channel, expon
     try:
         # Construct the command to run the Python script with the necessary arguments
         command = f"python {script_name}.py \"{file_path}\" \"{load_channel}\" \"{rev_channel}\" \"{json.dumps(exponents)}\""
+        print(command)
+        result = subprocess.run(command, text=True, capture_output=True, shell=True)
+
+        if result.returncode == 0:
+            return {"output": result.stdout}  # Return the script output
+        else:
+            return {"error": result.stderr}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+def execute_peaks_script(script_name, file_path, load_channel, rev_channel, prominence, threshold):
+    try:
+        # Construct the command to run the Python script with the necessary arguments
+        command = f"python {script_name}.py \"{file_path}\" \"{load_channel}\" \"{rev_channel}\" \"{prominence}\" \"{threshold}\""
         print(command)
         result = subprocess.run(command, text=True, capture_output=True, shell=True)
 
