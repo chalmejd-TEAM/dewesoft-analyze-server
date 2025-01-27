@@ -1,7 +1,7 @@
 import dwdatareader as dw
 import numpy as np
 import pandas
-import fast_calculations
+import weightedMean
 import json
 import sys
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     rev_count = np.nan_to_num(rev_count, nan=0.0)
 
     # Perform the EWM calculations with the exponents
-    results = fast_calculations.calculate(torque_smoothed, rev_count, exponents)
+    results = weightedMean.calculate(torque_smoothed, rev_count, exponents)
 
     # Print the results as JSON for Flask to capture
     print(json.dumps(results))
