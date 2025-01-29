@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, decimate
 import dwdatareader as dw
 import pandas
 import weightedMean
@@ -49,10 +49,13 @@ if __name__ == "__main__":
     revs = df[rev_channel].to_numpy()
 
     torque_smoothed = abs(np.array(load))  
-    rev_count = np.array(revs)       
+    rev_count = np.array(revs)   
 
     torque_smoothed = np.nan_to_num(torque_smoothed, nan=0.0)
     rev_count = np.nan_to_num(rev_count, nan=0.0)
+
+    torque_smoothed = decimate(torque_smoothed, 1000)
+    rev_count = decimate(rev_count, 1000)    
 
     results = find_peak_data(torque_smoothed, rev_count, prominence, threshold)
 
