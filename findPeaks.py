@@ -7,14 +7,18 @@
 # import findPeaks  # Import the C++ module
 
 # def find_peak_data(load, cycles, prominence=1, min_distance=50, window_length=51):
-#     # Apply optimized C++ smoothing and peak detection
+#     # Check if load is empty or too small for filtering
+#     if len(load) < window_length:
+#         return np.array([]), np.array([]), load, cycles
+
+#     # Apply Savitzky-Golay filter
 #     smoothed_load = findPeaks.savgol_filter(load, window_length, 3)
 #     peak_indices, peak_values = findPeaks.find_peaks(smoothed_load, prominence)
 
 #     # Extract peak cycles
 #     peak_cycles = cycles[peak_indices]
-    
 #     return peak_cycles, peak_values, smoothed_load, cycles
+
 
 # def loadFile(file):
 #     try:
@@ -32,12 +36,23 @@
 #     torque_smoothed = np.nan_to_num(abs(load), nan=0.0)
 #     rev_count = np.nan_to_num(revs, nan=0.0)
 
+#     # Check if the arrays have valid data
+#     if len(torque_smoothed) == 0 or len(rev_count) == 0:
+#         print("Warning: Empty data in chunk.")
+#         return np.array([]), np.array([]), torque_smoothed, rev_count
+
 #     # Use fast C++ decimation
-#     if len(torque_smoothed) > 27:
-#         torque_smoothed = findPeaks.decimate(torque_smoothed, 1000)
-#         rev_count = findPeaks.decimate(rev_count, 1000)
+#     torque_smoothed = findPeaks.decimate(torque_smoothed, 1000)
+#     rev_count = findPeaks.decimate(rev_count, 1000)
+
+#     # Check after decimation
+#     if len(torque_smoothed) == 0 or len(rev_count) == 0:
+#         print("Warning: Empty data after decimation.")
+#         return np.array([]), np.array([]), torque_smoothed, rev_count
 
 #     return find_peak_data(torque_smoothed, rev_count, prominence)
+
+
 
 # def main(file_path, prominence=75, min_distance=50):
 #     df = loadFile(file_path)
@@ -60,6 +75,9 @@
 #     peak_values = np.concatenate([result[1] for result in results])
 #     load = np.concatenate([result[2] for result in results])
 #     cycles = np.concatenate([result[3] for result in results])
+
+#     print(peak_cycles)
+#     print(peak_values)
 
 #     # Plot results
 #     plt.plot(cycles, load)
